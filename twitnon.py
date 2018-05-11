@@ -76,6 +76,7 @@ for acc in acc_bar:
                          f'''<div>
 <strong><a href="{permalink}">{name}</a></strong><br />
 {time}<br />
+{img_url.rpartition('/')[2].partition('.')[0]}<br />
 [<a href="{img_url}:orig">IMG</a>] [<a href="{permalink}">SRC</a>]<br />
 <a href="{img_url}:orig"><img src="{img_url}:thumb" /></a>
 <hr />
