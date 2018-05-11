@@ -3,51 +3,97 @@
 # are permitted in any medium without royalty. This file is offered
 # as-is, without any warranty.
 
-import bs4, datetime, os, requests
+import bs4, datetime, os, requests, sys
+from tqdm import tqdm
 
 with open(os.path.join(os.path.dirname(__file__), 'accounts.txt')) as f:
-    accs = f.read().split()
+    accs = [line.strip().rpartition('/')[2]
+            for line in f if line.strip()]
 
 now = datetime.datetime.now()
 cutoff = now - datetime.timedelta(days=7)
+outfile = sys.argv[1]
 
-covered = set()
 imgs = []
 
-for acc in accs:
-    soup = bs4.BeautifulSoup(requests.get(acc).text, 'html.parser')
-    for tweet in soup.find_all('li', 'stream-item'):
+
+def tweets(account, cutoff):
+    url = f"https://twitter.com/i/profiles/show/{acc}/timeline/tweets"
+    params = {}
+    might_be_pinned = True
+    page_bar = tqdm(desc=f"Pages read ({account})")
+    while True:
+        page_bar.update()
+        resp = requests.get(url, params=params)
+        try:
+            data = resp.json()
+        except:
+            page_bar.write(f"{account} got {resp.status_code}")
+            page_bar.close()
+            return
+        min_position = data['min_position']
+        params['max_position'] = min_position
+        html = data['items_html']
+        if not html.strip():
+            page_bar.close()
+            return
+        soup = bs4.BeautifulSoup(html, 'html.parser')
+        found_something = False
+        for tweet in soup.find_all('li', 'stream-item'):
+            time = datetime.datetime.fromtimestamp(
+                int(tweet.find('a', 'js-permalink').find('span')['data-time']))
+            if time < cutoff:
+                # We should skip this one
+                if ('data-retweet-id' not in tweet.find('div').attrs and
+                        not might_be_pinned):
+                    # It's not a retweet, so stop looking altogether
+                    page_bar.close()
+                    return
+                continue
+            found_something = True
+            might_be_pinned = False
+            yield tweet
+        if not found_something:
+            # All we found on this page was old retweets, better abort
+            page_bar.close()
+            return
+
+
+image_bar = tqdm(desc="Images found")
+acc_bar = tqdm(accs, desc="Accounts")
+for acc in acc_bar:
+    acc_bar.write(acc)
+    for tweet in tweets(acc, cutoff):
         name = tweet.find(class_='fullname').text
         perma = tweet.find('a', 'js-permalink')
         permalink = f"https://twitter.com{perma['href']}"
-        conv_id = perma['data-conversation-id']
         time = datetime.datetime.fromtimestamp(
             int(perma.find('span')['data-time']))
-        if time < cutoff or conv_id in covered:
-            continue
         for i, photo in enumerate(tweet.find_all('div', 'js-adaptive-photo')):
-            img_url = photo.find('img')['src'] + ':orig'
+            img_url = photo.find('img')['src']
             # tweak the time so images appear in order
             imgs.append((time - datetime.timedelta(microseconds=i),
                          f'''<div>
 <strong><a href="{permalink}">{name}</a></strong><br />
 {time}<br />
-<a href="{img_url}"><img src="{img_url}" /></a><br />
-<a href="{img_url}" class="source">{img_url}</a><br />
-<a href="{permalink}" class="source">{permalink}</a>
+[<a href="{img_url}:orig">IMG</a>] [<a href="{permalink}">SRC</a>]<br />
+<a href="{img_url}:orig"><img src="{img_url}:thumb" /></a>
+<hr />
 </div>'''))
-        covered.add(conv_id)
+            image_bar.update()
+acc_bar.close()
+image_bar.close()
 
-print(f'''<!DOCTYPE html><html><head>
+with open(outfile, 'w') as f:
+    print(f'''<!DOCTYPE html><html><head>
+<meta charset="UTF-8"/>
 <title>Twitnon report {now}</title>
 ''''''<style type="text/css">
-div { display: inline-block; }
-img { width: 200px; max-width: 100%; }
-a.source { font-size: 0.4em; }
+div { display: inline-block; width: 160px; font-size: 0.6em; }
 </style>
-</head><body>''')
-for img in sorted(imgs, key=lambda x: x[0], reverse=True):
-    print(img[1])
-print('''<br /><br />
+</head><body>''', file=f)
+    for img in sorted(imgs, key=lambda x: x[0], reverse=True):
+        print(img[1], file=f)
+    print('''<br /><br />
 <a href="https://github.com/hushbugger/twitnon">Source code</a>
-</body></html>''')
+</body></html>''', file=f)
