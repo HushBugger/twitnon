@@ -14,7 +14,7 @@ now = datetime.datetime.now()
 cutoff = now - datetime.timedelta(days=7)
 outfile = sys.argv[1]
 
-imgs = []
+imgs = set()
 
 
 def tweets(account, cutoff):
@@ -72,8 +72,8 @@ for acc in acc_bar:
         for i, photo in enumerate(tweet.find_all('div', 'js-adaptive-photo')):
             img_url = photo.find('img')['src']
             # tweak the time so images appear in order
-            imgs.append((time - datetime.timedelta(microseconds=i),
-                         f'''<div>
+            imgs.add((time - datetime.timedelta(microseconds=i),
+                      f'''<div>
 <strong><a href="{permalink}">{name}</a></strong><br />
 {time}<br />
 {img_url.rpartition('/')[2].partition('.')[0]}<br />
