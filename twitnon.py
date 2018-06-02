@@ -44,8 +44,12 @@ def tweets(account, cutoff):
         soup = bs4.BeautifulSoup(html, 'html.parser')
         found_something = False
         for tweet in soup.find_all('li', 'stream-item'):
+            permalink = tweet.find('a', 'js-permalink')
+            if permalink is None:
+                page_bar.write("Couldn't find permalink")
+                continue
             time = datetime.datetime.fromtimestamp(
-                int(tweet.find('a', 'js-permalink').find('span')['data-time']))
+                int(permalink.find('span')['data-time']))
             if time < cutoff:
                 # We should skip this one
                 if ('data-retweet-id' not in tweet.find('div').attrs and
