@@ -10,6 +10,7 @@ from time import sleep
 with open(os.path.join(os.path.dirname(__file__), 'accounts.txt')) as f:
     accs = [line.strip().rpartition('/')[2]
             for line in f if line.strip()]
+accset = {acc.casefold() for acc in accs}
 
 now = datetime.datetime.now()
 cutoff = now - datetime.timedelta(days=7)
@@ -73,6 +74,8 @@ for acc in acc_bar:
     acc_bar.write(acc)
     for tweet in tweets(acc, cutoff):
         name = tweet.find(class_='fullname').text
+        username = tweet.find('div', 'tweet')['data-screen-name']
+        follow = username.casefold() in accset
         perma = tweet.find('a', 'js-permalink')
         permalink = f"https://twitter.com{perma['href']}"
         time = datetime.datetime.fromtimestamp(
@@ -81,7 +84,7 @@ for acc in acc_bar:
             img_url = photo.find('img')['src']
             # tweak the time so images appear in order
             imgs.add((time - datetime.timedelta(microseconds=i),
-                      f'''<div>
+                      f'''<div class="{'follow' if follow else 'nofollow'}">
 <strong><a href="{permalink}">{name}</a></strong><br />
 {time}<br />
 {img_url.rpartition('/')[2].partition('.')[0]}<br />
@@ -99,9 +102,11 @@ with open(outfile, 'w') as f:
 <title>Twitnon report {now}</title>
 ''''''<style type="text/css">
 div { display: inline-block; width: 160px; font-size: 0.6em; }
+div.nofollow { background-color: #ffeeee; }
+div.follow { background-color: #eeffee; }
 </style>
 </head><body>''', file=f)
-    for img in sorted(imgs, key=lambda x: x[0], reverse=True):
+    for img in sorted(imgs, reverse=True):
         print(img[1], file=f)
     print('''<br /><br />
 <a href="https://github.com/hushbugger/twitnon">Source code</a>
