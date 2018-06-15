@@ -82,14 +82,19 @@ for acc in acc_bar:
             int(perma.find('span')['data-time']))
         for i, photo in enumerate(tweet.find_all('div', 'js-adaptive-photo')):
             img_url = photo.find('img')['src']
+            identifier = img_url.rpartition('/')[2].partition('.')[0]
             # tweak the time so images appear in order
             imgs.add((time - datetime.timedelta(microseconds=i),
-                      f'''<div class="{'follow' if follow else 'nofollow'}">
+                      f'''<div class="{'follow' if follow else 'nofollow'}" '''
+                      f'''data-tweeter="{username}">
+
 <strong><a href="{permalink}">{name}</a></strong><br />
 {time}<br />
-{img_url.rpartition('/')[2].partition('.')[0]}<br />
-[<a href="{img_url}:orig">IMG</a>] [<a href="{permalink}">SRC</a>]<br />
-<a href="{img_url}:orig"><img src="{img_url}:thumb" /></a>
+{identifier}<br />
+[<a href="javascript:filterTweeter('{username}');" title="Hide account">X</a>]
+[<a href="{img_url}:orig" title="Full image">IMG</a>]
+[<a href="{permalink}" title="Source">SRC</a>]<br />
+<a href="{img_url}:orig"><img src="{img_url}:thumb" alt="{identifier}" /></a>
 <hr />
 </div>'''))
             image_bar.update()
@@ -97,17 +102,31 @@ acc_bar.close()
 image_bar.close()
 
 with open(outfile, 'w') as f:
-    print(f'''<!DOCTYPE html><html><head>
+    print(f'''<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"/>
 <title>Twitnon report {now}</title>
-''''''<style type="text/css">
+''''''<style>
 div { display: inline-block; width: 160px; font-size: 0.6em; }
 div.nofollow { background-color: #ffeeee; }
 div.follow { background-color: #eeffee; }
 </style>
+<script>
+function filterTweeter(name) {
+    document.querySelectorAll('[data-tweeter="' + name + '"]').forEach(
+        function (tweet) {
+            tweet.remove();
+        }
+    )
+}
+</script>
 </head><body>''', file=f)
     for img in sorted(imgs, reverse=True):
         print(img[1], file=f)
+    print("<br /><br />Followed accounts are green, others are red.", file=f)
+    acclist = ', '.join(f'<a href="https://twitter.com/{acc}">{acc}</a>'
+                        for acc in accs)
+    print(f"""<br /> <br />
+Followed accounts: {acclist}""", file=f)
     print('''<br /><br />
 <a href="https://github.com/hushbugger/twitnon">Source code</a>
 </body></html>''', file=f)
