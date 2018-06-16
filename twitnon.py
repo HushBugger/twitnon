@@ -122,7 +122,7 @@ function filterTweeter(name) {
 </head><body>''', file=f)
     for img in sorted(imgs, reverse=True):
         print(img[1], file=f)
-    print("<br /><br />Followed accounts are green, others are red.", file=f)
+    print("<br /><br />Followed accounts are green, retweets are red.", file=f)
     acclist = ', '.join(f'<a href="https://twitter.com/{acc}">{acc}</a>'
                         for acc in accs)
     print(f"""<br /> <br />
