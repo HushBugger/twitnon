@@ -94,7 +94,7 @@ for acc in acc_bar:
                       f'''<div class="{'follow' if follow else 'nofollow'}" '''
                       f'''data-tweeter="{username}">
 
-<strong><a href="{permalink}">{username}</a></strong><br />
+<strong><a href="{permalink}">@{username}</a></strong><br />
 {time}<br />
 {identifier}<br />
 [<a href="javascript:filterTweeter('{username}');" title="Hide account">X</a>]
