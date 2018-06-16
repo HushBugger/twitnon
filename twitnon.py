@@ -3,18 +3,25 @@
 # are permitted in any medium without royalty. This file is offered
 # as-is, without any warranty.
 
-import bs4, datetime, os, requests, sys
+import argparse, bs4, datetime, requests
+from pathlib import Path
 from tqdm import tqdm
 from time import sleep
 
-with open(os.path.join(os.path.dirname(__file__), 'accounts.txt')) as f:
+parser = argparse.ArgumentParser()
+parser.add_argument('outfile')
+parser.add_argument('-i', '--infile',
+                    default=str(Path(__file__).parent / 'accounts.txt'))
+parser.add_argument('-d', '--days', type=int, default=7)
+args = parser.parse_args()
+
+with open(args.infile) as f:
     accs = [line.strip().rpartition('/')[2]
             for line in f if line.strip()]
 accset = {acc.casefold() for acc in accs}
 
 now = datetime.datetime.now()
-cutoff = now - datetime.timedelta(days=7)
-outfile = sys.argv[1]
+cutoff = now - datetime.timedelta(days=args.days)
 
 imgs = set()
 
@@ -73,7 +80,6 @@ acc_bar = tqdm(accs, desc="Accounts")
 for acc in acc_bar:
     acc_bar.write(acc)
     for tweet in tweets(acc, cutoff):
-        name = tweet.find(class_='fullname').text
         username = tweet.find('div', 'tweet')['data-screen-name']
         follow = username.casefold() in accset
         perma = tweet.find('a', 'js-permalink')
@@ -88,7 +94,7 @@ for acc in acc_bar:
                       f'''<div class="{'follow' if follow else 'nofollow'}" '''
                       f'''data-tweeter="{username}">
 
-<strong><a href="{permalink}">{name}</a></strong><br />
+<strong><a href="{permalink}">{username}</a></strong><br />
 {time}<br />
 {identifier}<br />
 [<a href="javascript:filterTweeter('{username}');" title="Hide account">X</a>]
@@ -101,7 +107,7 @@ for acc in acc_bar:
 acc_bar.close()
 image_bar.close()
 
-with open(outfile, 'w') as f:
+with open(args.outfile, 'w') as f:
     print(f'''<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"/>
 <title>Twitnon report {now}</title>
