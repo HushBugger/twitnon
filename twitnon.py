@@ -90,17 +90,18 @@ for acc in acc_bar:
             img_url = photo.find('img')['src']
             identifier = img_url.rpartition('/')[2].partition('.')[0]
             # tweak the time so images appear in order
-            imgs.add((time - datetime.timedelta(microseconds=i),
-                      f'''<div class="{'follow' if follow else 'nofollow'}" '''
-                      f'''data-tweeter="{username}">
-
+            imgs.add((time - datetime.timedelta(microseconds=i), f'''
+<div class="tweet {'follow' if follow else 'nofollow'}"
+ id="{identifier}" data-tweeter="{username}" data-url="{img_url}"
+ onclick="mark('{identifier}');">
 <strong><a href="{permalink}">@{username}</a></strong><br />
 {time}<br />
 {identifier}<br />
 [<a href="javascript:filterTweeter('{username}');" title="Hide account">X</a>]
 [<a href="{img_url}:orig" title="Full image">IMG</a>]
 [<a href="{permalink}" title="Source">SRC</a>]<br />
-<a href="{img_url}:orig"><img src="{img_url}:thumb" alt="{identifier}" /></a>
+<a href="{img_url}:orig"><img class="thumb" src="{img_url}:thumb"
+ alt="{identifier}" /></a>
 <hr />
 </div>'''))
             image_bar.update()
@@ -111,10 +112,12 @@ with open(args.outfile, 'w') as f:
     print(f'''<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"/>
 <title>Twitnon report {now}</title>
-''''''<style>
-div { display: inline-block; width: 160px; font-size: 0.6em; }
+'''r'''<style>
+div.tweet { display: inline-block; width: 160px; font-size: 0.6em; }
 div.nofollow { background-color: #ffeeee; }
 div.follow { background-color: #eeffee; }
+div.marked { background-color: #eeeeff; }
+img#viewer { height: 500px; max-width: 1000px; }
 </style>
 <script>
 function filterTweeter(name) {
@@ -124,11 +127,140 @@ function filterTweeter(name) {
         }
     )
 }
+
+function mark(ident) {
+    let div = document.getElementById(ident);
+    if (div.classList.contains('marked')) {
+        div.classList.remove('marked');
+    } else {
+        div.classList.add('marked');
+    }
+}
+
+// Remove unmarked tweets, return marked tweets with url set
+function cleanup() {
+    let interesting = [];
+    let unused = [];
+    let tweets = document.getElementById('tweets');
+    for (let tweet of tweets.getElementsByClassName('tweet')) {
+        if (!tweet.classList.contains('marked')) {
+            unused.push(tweet);
+        } else {
+            interesting.push(tweet);
+        }
+    }
+    for (let tweet of unused) {
+        tweet.remove();
+    }
+    for (let tweet of interesting) {
+        tweet.url = tweet.attributes['data-url'].value;
+    }
+    return interesting;
+}
+
+function render() {
+    let todo = cleanup();
+    let done = getDone();
+
+    function renderTodo() {
+        let text = "";
+        for (let tweet of todo) {
+            text += tweet.url + ":orig\n";
+        }
+        return text;
+    }
+
+    function renderDone() {
+        let text = "";
+        for (let key of [...done.keys()].sort()) {
+            text += key + "\n";
+            for (let tweet of done.get(key)) {
+                text += tweet.url + ":orig\n";
+            }
+            text += "\n";
+        }
+        return text;
+    }
+
+    document.getElementById('todo').innerText = renderTodo();
+    document.getElementById('done').innerText = renderDone();
+    showCurrent();
+    document.location.hash = 'sorter';
+    document.getElementById('reader').focus();
+}
+
+function getCurrent() {
+    return document.getElementsByClassName('marked')[0];
+}
+
+function getDone() {
+    return document.getElementById('done').items;
+}
+
+function showCurrent() {
+    let viewer = document.getElementById('viewer');
+    let viewerlink = document.getElementById('viewerlink');
+    let current = getCurrent();
+    if (current) {
+        viewerlink.href = current.url + ':orig';
+        viewer.src = current.url;
+    } else {
+        viewer.remove();
+    }
+}
+
+function processInput() {
+    let current = getCurrent();
+    current.remove();
+    let field = document.getElementById('reader');
+    let text = field.value;
+    field.value = '';
+    let chars = text
+        .split(',')
+        .sort()
+        .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+        .join(' & ');
+    let existing = null;
+    let done = getDone();
+    if (done.has(chars)) {
+        existing = done.get(chars);
+    } else {
+        existing = [];
+    }
+    existing.push(current);
+    if (chars) {
+        getDone().set(chars, existing);
+    }
+    render();
+}
+
+window.onload = function() {
+    document.getElementById('done').items = new Map();
+    document.getElementById('sorterform').addEventListener(
+        'submit',
+        function (event) {
+            event.preventDefault();
+            processInput();
+        }
+    );
+}
 </script>
-</head><body>''', file=f)
+</head><body>
+<div id="tweets">''', file=f)
     for img in sorted(imgs, reverse=True):
         print(img[1], file=f)
-    print("<br /><br />Followed accounts are green, retweets are red.", file=f)
+    print("""
+</div>
+<div id="sorter">
+    <a href="javascript:render();">Showtime</a><br />
+    <a id="viewerlink"><img id="viewer" src="" /></a>
+    <form id="sorterform" onsubmit="return false;">
+        <input id="reader" type="text"></input>
+    </form>
+    <pre id="done"></pre>
+    <pre id="todo"></pre>
+</div>
+<br /><br />Followed accounts are green, retweets are red.""", file=f)
     acclist = ', '.join(f'<a href="https://twitter.com/{acc}">{acc}</a>'
                         for acc in accs)
     print(f"""<br /> <br />
