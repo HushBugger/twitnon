@@ -116,10 +116,11 @@ with open(args.outfile, 'w') as f:
 div.tweet { display: inline-block; width: 160px; font-size: 0.6em; }
 div.nofollow { background-color: #ffeeee; }
 div.follow { background-color: #eeffee; }
-div.marked { background-color: #eeeeff; }
+div.marked { background-color: #bbbbff; }
 img#viewer { height: 500px; max-width: 1000px; }
 </style>
 <script>
+// Remove all of an account's tweets
 function filterTweeter(name) {
     document.querySelectorAll('[data-tweeter="' + name + '"]').forEach(
         function (tweet) {
@@ -128,6 +129,7 @@ function filterTweeter(name) {
     )
 }
 
+// Toggle whether a tweet is marked
 function mark(ident) {
     let div = document.getElementById(ident);
     if (div.classList.contains('marked')) {
@@ -158,6 +160,17 @@ function cleanup() {
     return interesting;
 }
 
+// Escape special characters
+function escapeChars(text) {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// Refresh the showtime view
 function render() {
     let todo = cleanup();
     let done = getDone();
@@ -165,7 +178,8 @@ function render() {
     function renderTodo() {
         let text = "";
         for (let tweet of todo) {
-            text += tweet.url + ":orig\n";
+            let url = tweet.url + ':orig';
+            text += '<a href="' + url + '">' + url + '</a>\n';
         }
         return text;
     }
@@ -175,28 +189,36 @@ function render() {
         for (let key of [...done.keys()].sort()) {
             text += key + "\n";
             for (let tweet of done.get(key)) {
-                text += tweet.url + ":orig\n";
+                let url = tweet.url + ':orig';
+                text += '<a href="' + url + '">' + url + '</a>';
+                for (let comment of tweet.comments) {
+                    text += " (" + escapeChars(comment) + ")";
+                }
+                text += "\n";
             }
             text += "\n";
         }
         return text;
     }
 
-    document.getElementById('todo').innerText = renderTodo();
-    document.getElementById('done').innerText = renderDone();
+    document.getElementById('todo').innerHTML = renderTodo();
+    document.getElementById('done').innerHTML = renderDone();
     showCurrent();
     document.location.hash = 'sorter';
     document.getElementById('reader').focus();
 }
 
+// Return the first tweet in the showtime queue
 function getCurrent() {
     return document.getElementsByClassName('marked')[0];
 }
 
+// Get the done pre
 function getDone() {
     return document.getElementById('done').items;
 }
 
+// Display the image of the current tweet
 function showCurrent() {
     let viewer = document.getElementById('viewer');
     let viewerlink = document.getElementById('viewerlink');
@@ -215,11 +237,18 @@ function processInput() {
     let field = document.getElementById('reader');
     let text = field.value;
     field.value = '';
-    let chars = text
+    if (!text) {
+        render();
+        return;
+    }
+    let textparts = text.split('/');
+    text = textparts[0];
+    current.comments = textparts.slice(1);
+    let chars = escapeChars('>' + text
         .split(',')
         .sort()
         .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-        .join(' & ');
+        .join(' & '));
     let existing = null;
     let done = getDone();
     if (done.has(chars)) {
@@ -228,9 +257,21 @@ function processInput() {
         existing = [];
     }
     existing.push(current);
-    if (chars) {
-        getDone().set(chars, existing);
-    }
+    getDone().set(chars, existing);
+    render();
+}
+
+function showtime() {
+    let viewerlink = document.getElementById('viewerlink');
+    let sorterform = document.getElementById('sorterform');
+    let viewer = document.createElement('img');
+    let reader = document.createElement('input');
+    viewer.id = 'viewer';
+    viewerlink.appendChild(viewer);
+    reader.type = 'text';
+    reader.id = 'reader';
+    sorterform.appendChild(reader);
+    document.getElementById('showtime').remove();
     render();
 }
 
@@ -252,12 +293,18 @@ window.onload = function() {
     print("""
 </div>
 <div id="sorter">
-    <a href="javascript:render();">Showtime</a><br />
-    <a id="viewerlink"><img id="viewer" src="" /></a>
-    <form id="sorterform" onsubmit="return false;">
-        <input id="reader" type="text"></input>
-    </form>
-    <pre id="done"></pre>
+    <button onclick="showtime();" id="showtime">Showtime</button><br />
+    <a id="viewerlink"></a>
+    <form id="sorterform" onsubmit="return false;"></form>
+    <pre id="done">
+To sort images, first click on them above to select them. Then press Showtime.
+For each image, enter the characters, and maybe a comment, and press enter.
+If you enter "flowey,asriel/this is a comment", it becomes
+>Asriel &amp; Flowey
+https://pbs.twimg.com/media/[...].jpg:orig (this is a comment)
+The names are capitalized and sorted.
+To dismiss an image, press enter without entering anything.
+    </pre>
     <pre id="todo"></pre>
 </div>
 <br /><br />Followed accounts are green, retweets are red.""", file=f)
