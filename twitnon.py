@@ -340,20 +340,10 @@ function processInput() {
     let field = document.getElementById('reader');
     let text = field.value;
     field.value = '';
-    if (!text) {
-        render();
-        return;
+    if (text) {
+        specs.push(new Spec(text, current.url + ':orig'));
     }
-    specs.push(new Spec(text, current.url + ':orig'));
     render();
-}
-
-function sortByTime(a, b) {
-    a = a.attributes['data-time'].value;
-    b = b.attributes['data-time'].value;
-    if (a < b) return -1;
-    if (a > b) return 1;
-    return 0;
 }
 
 function showtime() {
@@ -367,14 +357,6 @@ function showtime() {
     reader.id = 'reader';
     sorterform.appendChild(reader);
     document.getElementById('showtime').remove();
-    let todo = cleanup().sort(sortByTime);
-    let tweets = document.getElementById('tweets');
-    for (let tweet of todo) {
-        tweets.removeChild(tweet);
-    }
-    for (let tweet of todo) {
-        tweets.appendChild(tweet);
-    }
     render();
 }
 
