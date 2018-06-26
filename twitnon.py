@@ -112,7 +112,7 @@ image_bar.close()
 with open(args.outfile, 'w') as f:
     print(f'''<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"/>
-<title>Twitnon report {now}</title>
+<title>Twitnon report {datetime.datetime.now()}</title>
 '''r'''<style>
 div.tweet { display: inline-block; width: 160px; font-size: 0.6em; }
 div.nofollow { background-color: #ffeeee; }
