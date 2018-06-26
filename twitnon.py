@@ -90,10 +90,11 @@ for acc in acc_bar:
             img_url = photo.find('img')['src']
             identifier = img_url.rpartition('/')[2].partition('.')[0]
             # tweak the time so images appear in order
-            imgs.add((time - datetime.timedelta(microseconds=i), f'''
+            # We want reverse order, so they appear in order during showtime
+            imgs.add((time + datetime.timedelta(microseconds=i), f'''
 <div class="tweet {'follow' if follow else 'nofollow'}"
  id="{identifier}" data-tweeter="{username}" data-url="{img_url}"
- onclick="mark('{identifier}');">
+ data-time="{time}" onclick="mark('{identifier}');">
 <strong><a href="{permalink}">@{username}</a></strong><br />
 {time}<br />
 {identifier}<br />
@@ -120,6 +121,8 @@ div.marked { background-color: #bbbbff; }
 img#viewer { height: 500px; max-width: 1000px; }
 </style>
 <script>
+"use strict";
+
 // Remove all of an account's tweets
 function filterTweeter(name) {
     document.querySelectorAll('[data-tweeter="' + name + '"]').forEach(
@@ -127,6 +130,119 @@ function filterTweeter(name) {
             tweet.remove();
         }
     )
+}
+
+const abbrevs = new Map([
+    // General
+    ["al", "Alphys"], ["un", "Undyne"], ["ag", "Asgore"], ["to", "Toriel"], ["gr", "Group"],
+    // MTT crew
+    ["mt", "Mettaton"], ["bp", "Burgerpants"], ["nb", "Napstablook"], ["ob", "Other bots"],
+    // Skeletons
+    ["sa", "Sans"], ["pa", "Papyrus"], ["ga", "Gaster"],
+    // Children
+    ["fr", "Frisk"], ["ch", "Chara"], ["as", "Asriel"], ["fl", "Flowey"], ["mk", "Monster kid"], ["hu", "human"],
+    // AUs
+    ["ss", "Storyshift"], ["sw", "Swap"], ["fe", "Underfell"], ["sf", "Swapfell"], ["ho", "Horrortale"],
+    ["ms", "Misc. Skeletons"]
+]);
+
+const groups = new Map([
+    // The ordering of this decides which groups have priority over others
+    // e.g. alphys,mettaton goes to General, frisk,burgerpants goes to MTT
+    ["General", ["Alphys", "Undyne", "Asgore", "Toriel", "Group"]],
+    ["MTT", ["Mettaton", "Burgerpants", "Napstablook", "Other bots"]],
+    ["Skeletons", ["Sans", "Papyrus", "Gaster"]],
+    ["Children", ["Frisk", "Chara", "Asriel", "Flowey", "Monster kid", "human"]],
+    ["AUs", ["Storyshift", "Swap", "Underfell", "Swapfell", "Horrortale", "Misc. Skeletons"]],
+]);
+
+const groupOrder = ["Children", "General", "Other", "MTT", "Skeletons", "AUs"];
+
+const specs = [];
+
+function capitalize(word) {
+    return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
+function normalize(word) {
+    word = word.trim();
+    return abbrevs.get(word) || capitalize(word);
+}
+
+class Spec {
+    constructor(text, url) {
+        const specparts = text.split('/');
+        const characters = specparts[0];
+        this.comments = specparts.slice(1);
+        this.characters = [];
+        this.url = url;
+        for (let character of characters.split(',')) {
+            const split = character.split('!');
+            if (split.length > 1) {
+                this.characters.push(normalize(split[0]) + '!' + normalize(split[1]));
+            } else {
+                this.characters.push(normalize(split[0]));
+            }
+        }
+        this.characters.sort();
+    }
+
+    get characterString() {
+        return this.characters.join(' & ');
+    }
+
+    toString() {
+        let repr = '<a href="' + this.url + '">' + this.url + '</a>';
+        for (let comment of this.comments) {
+            repr += ' (' + escapeChars(comment) + ')';
+        }
+        return repr;
+    }
+
+    categorize() {
+        for (let character of this.characters) {
+            if (character.includes('!')) {
+                return "AUs";
+            }
+        }
+        for (let [name, members] of groups) {
+            for (let character of this.characters) {
+                if (members.includes(character)) {
+                    return name;
+                }
+            }
+        }
+        return "Other";
+    }
+}
+
+function buildListing() {
+    const sorted = new Map();
+    for (let group of groupOrder) {
+        sorted.set(group, new Map());
+    }
+    for (let spec of specs) {
+        let group = sorted.get(spec.categorize());
+        if (group.has(spec.characterString)) {
+            group.get(spec.characterString).push(spec);
+        } else {
+            group.set(spec.characterString, [spec]);
+        }
+    }
+    let output = "";
+    for (let [groupName, group] of sorted) {
+        output += escapeChars("* " + groupName + "\n");
+        for (let characters of [...group.keys()].sort()) {
+            output += escapeChars(">" + characters + "\n");
+            for (let spec of group.get(characters)) {
+                output += spec.toString() + "\n";
+            }
+            output += "\n";
+        }
+        output += "\n";
+    }
+    output += "Sources and full catalog: " + document.location.toString().split('#')[0];
+    return output;
 }
 
 // Toggle whether a tweet is marked
@@ -184,33 +300,20 @@ function render() {
         return text;
     }
 
-    function renderDone() {
-        let text = "";
-        for (let key of [...done.keys()].sort()) {
-            text += key + "\n";
-            for (let tweet of done.get(key)) {
-                let url = tweet.url + ':orig';
-                text += '<a href="' + url + '">' + url + '</a>';
-                for (let comment of tweet.comments) {
-                    text += " (" + escapeChars(comment) + ")";
-                }
-                text += "\n";
-            }
-            text += "\n";
-        }
-        return text;
-    }
-
     document.getElementById('todo').innerHTML = renderTodo();
-    document.getElementById('done').innerHTML = renderDone();
+    document.getElementById('done').innerHTML = buildListing();
     showCurrent();
-    document.location.hash = 'sorter';
+    let current = getCurrent();
+    if (current) {
+        document.location.hash = current.id;
+    }
     document.getElementById('reader').focus();
 }
 
-// Return the first tweet in the showtime queue
+// Return the next tweet in the showtime queue
 function getCurrent() {
-    return document.getElementsByClassName('marked')[0];
+    let marked = document.getElementsByClassName('marked');
+    return marked[marked.length - 1];
 }
 
 // Get the done pre
@@ -241,24 +344,16 @@ function processInput() {
         render();
         return;
     }
-    let textparts = text.split('/');
-    text = textparts[0];
-    current.comments = textparts.slice(1);
-    let chars = escapeChars('>' + text
-        .split(',')
-        .sort()
-        .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-        .join(' & '));
-    let existing = null;
-    let done = getDone();
-    if (done.has(chars)) {
-        existing = done.get(chars);
-    } else {
-        existing = [];
-    }
-    existing.push(current);
-    getDone().set(chars, existing);
+    specs.push(new Spec(text, current.url + ':orig'));
     render();
+}
+
+function sortByTime(a, b) {
+    a = a.attributes['data-time'].value;
+    b = b.attributes['data-time'].value;
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
 }
 
 function showtime() {
@@ -272,11 +367,18 @@ function showtime() {
     reader.id = 'reader';
     sorterform.appendChild(reader);
     document.getElementById('showtime').remove();
+    let todo = cleanup().sort(sortByTime);
+    let tweets = document.getElementById('tweets');
+    for (let tweet of todo) {
+        tweets.removeChild(tweet);
+    }
+    for (let tweet of todo) {
+        tweets.appendChild(tweet);
+    }
     render();
 }
 
 window.onload = function() {
-    document.getElementById('done').items = new Map();
     document.getElementById('sorterform').addEventListener(
         'submit',
         function (event) {
@@ -299,8 +401,9 @@ window.onload = function() {
     <pre id="done">
 To sort images, first click on them above to select them. Then press Showtime.
 For each image, enter the characters, and maybe a comment, and press enter.
-If you enter "flowey,asriel/this is a comment", it becomes
->Asriel &amp; Flowey
+Many characters and AUs have two-letter abbreviations.
+If you enter "fl,ss!as/this is a comment", it becomes
+>Storyshift!Asriel &amp; Flowey
 https://pbs.twimg.com/media/[...].jpg:orig (this is a comment)
 The names are capitalized and sorted.
 To dismiss an image, press enter without entering anything.
