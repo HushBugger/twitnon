@@ -216,6 +216,17 @@ class Spec {
     }
 }
 
+// Sort by number of names first, then alphabetically
+function sortCharacters(a, b) {
+    let aLength = a.split('&').length;
+    let bLength = b.split('&').length;
+    if (aLength < bLength) return -1;
+    if (aLength > bLength) return 1;
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+}
+
 function buildListing() {
     const sorted = new Map();
     for (let group of groupOrder) {
@@ -232,7 +243,7 @@ function buildListing() {
     let output = "";
     for (let [groupName, group] of sorted) {
         output += escapeChars("* " + groupName + "\n");
-        for (let characters of [...group.keys()].sort()) {
+        for (let characters of [...group.keys()].sort(sortCharacters)) {
             output += escapeChars(">" + characters + "\n");
             for (let spec of group.get(characters)) {
                 output += spec.toString() + "\n";
