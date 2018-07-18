@@ -199,6 +199,14 @@ class Spec {
         return repr;
     }
 
+    realLength() {
+        let length = this.url.length;
+        for (let comment of this.comments) {
+            length += 3 + comment.length;
+        }
+        return length + 1;
+    }
+
     categorize() {
         for (let character of this.characters) {
             if (character.includes('!')) {
@@ -242,24 +250,31 @@ function buildListing() {
     }
     let outputs = [];
     let output = "";
+    let length = 0;
     for (let [groupName, group] of sorted) {
         for (let characters of [...group.keys()].sort(sortCharacters)) {
-            if (output.length > 1800) {
+            if (length > 1800) {
                 output += "-----\n";
                 outputs.push(output);
                 output = "";
+                length = 0;
             }
             output += escapeChars(">" + characters + "\n");
+            length += characters.length + 2;
             for (let spec of group.get(characters)) {
-                if (output.length > 1900) {
+                if (length > 1900) {
                     output += "\n-----\n";
                     outputs.push(output);
                     output = "";
+                    length = 0;
                     output += escapeChars(">" + characters + " (cont.)\n");
+                    length += characters.length + 10;
                 }
                 output += spec.toString() + "\n";
+                length += spec.realLength();
             }
             output += "\n";
+            length += 1;
         }
     }
     output += "Sources and full catalog: " + document.location.toString().split('#')[0];
