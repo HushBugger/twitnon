@@ -240,20 +240,31 @@ function buildListing() {
             group.set(spec.characterString, [spec]);
         }
     }
+    let outputs = [];
     let output = "";
     for (let [groupName, group] of sorted) {
-        output += escapeChars("* " + groupName + "\n");
         for (let characters of [...group.keys()].sort(sortCharacters)) {
+            if (output.length > 1800) {
+                output += "-----\n";
+                outputs.push(output);
+                output = "";
+            }
             output += escapeChars(">" + characters + "\n");
             for (let spec of group.get(characters)) {
+                if (output.length > 1900) {
+                    output += "\n-----\n";
+                    outputs.push(output);
+                    output = "";
+                    output += escapeChars(">" + characters + " (cont.)\n");
+                }
                 output += spec.toString() + "\n";
             }
             output += "\n";
         }
-        output += "\n";
     }
     output += "Sources and full catalog: " + document.location.toString().split('#')[0];
-    return output;
+    outputs.push(output);
+    return outputs.join('\n');
 }
 
 // Toggle whether a tweet is marked
