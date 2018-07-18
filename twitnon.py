@@ -118,6 +118,7 @@ div.tweet { display: inline-block; width: 160px; font-size: 0.6em; }
 div.nofollow { background-color: #ffeeee; }
 div.follow { background-color: #eeffee; }
 div.marked { background-color: #bbbbff; }
+div.used { background-color: #bbbbbb; }
 img#viewer { height: 500px; max-width: 1000px; }
 </style>
 <script>
@@ -175,6 +176,7 @@ class Spec {
         const characters = specparts[0];
         this.comments = specparts.slice(1);
         this.characters = [];
+        this.text = text;
         this.url = url;
         for (let character of characters.split(',')) {
             const split = character.split('!');
@@ -197,6 +199,10 @@ class Spec {
             repr += ' (' + escapeChars(comment) + ')';
         }
         return repr;
+    }
+
+    serialize() {
+        return [this.text, this.url];
     }
 
     realLength() {
@@ -285,10 +291,15 @@ function buildListing() {
 // Toggle whether a tweet is marked
 function mark(ident) {
     let div = document.getElementById(ident);
-    if (div.classList.contains('marked')) {
+    if (div.classList.contains('used')) {
+        div.classList.remove('used');
+        localStorage.removeItem(ident);
+    } else if (div.classList.contains('marked')) {
         div.classList.remove('marked');
+        localStorage.removeItem(ident);
     } else {
         div.classList.add('marked');
+        localStorage.setItem(ident, 'marked');
     }
 }
 
@@ -371,14 +382,49 @@ function showCurrent() {
     }
 }
 
+function saveSpecs() {
+    const serializedSpecs = [];
+    for (let spec of specs) {
+        serializedSpecs.push(spec.serialize());
+    }
+    localStorage.setItem('specs', JSON.stringify(serializedSpecs));
+}
+
+function loadSpecs() {
+    const serializedSpecs = JSON.parse(localStorage.getItem('specs'));
+    if (serializedSpecs) {
+        specs.length = 0;
+        for (let serializedSpec of serializedSpecs) {
+            specs.push(new Spec(...serializedSpec));
+        }
+        document.getElementById('done').innerHTML = buildListing();
+        let button = document.createElement('button');
+        button.setAttribute('onclick', "clearSpecStorage();");
+        button.innerText = "Clear old";
+        button.id = "clearspecstorage";
+        document.getElementById('sorter').insertBefore(
+            button,
+            document.getElementById('done')
+        );
+    }
+}
+
+function clearSpecStorage() {
+    localStorage.removeItem('specs');
+    specs.length = 0;
+    document.getElementById('done').innerHTML = buildListing();
+}
+
 function processInput() {
     let current = getCurrent();
+    localStorage.setItem(current.id, 'used');
     current.remove();
     let field = document.getElementById('reader');
     let text = field.value;
     field.value = '';
     if (text) {
         specs.push(new Spec(text, current.url + ':orig'));
+        saveSpecs();
     }
     render();
 }
@@ -405,6 +451,17 @@ window.onload = function() {
             processInput();
         }
     );
+
+    if (localStorage.length) {
+        for (let tweet of document.getElementsByClassName('tweet')) {
+            let status = localStorage.getItem(tweet.id);
+            if (status) {
+                tweet.classList.add(localStorage.getItem(tweet.id));
+            }
+        }
+    }
+
+    loadSpecs();
 }
 </script>
 </head><body>
