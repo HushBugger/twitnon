@@ -135,29 +135,42 @@ function filterTweeter(name) {
 
 const abbrevs = new Map([
     // General
-    ["al", "Alphys"], ["un", "Undyne"], ["ag", "Asgore"], ["to", "Toriel"], ["gr", "Group"],
+    ["al", "Alphys"], ["un", "Undyne"], ["ag", "Asgore"], ["to", "Toriel"],
+    ["gr", "Group"],
     // MTT crew
-    ["mt", "Mettaton"], ["bp", "Burgerpants"], ["nb", "Napstablook"], ["ob", "Other bots"],
+    ["mt", "Mettaton"], ["bp", "Burgerpants"], ["nb", "Napstablook"],
+    ["ob", "Other bots"], ["mm", "Mew Mew"], ["mmm", "Mad Mew Mew"],
+    ["nbo", "Napstabot"], ["mb", "Mettablook"],
     // Skeletons
     ["sa", "Sans"], ["pa", "Papyrus"], ["ga", "Gaster"],
     // Children
-    ["fr", "Frisk"], ["ch", "Chara"], ["as", "Asriel"], ["fl", "Flowey"], ["mk", "Monster kid"], ["hu", "human"],
+    ["fr", "Frisk"], ["ch", "Chara"], ["as", "Asriel"], ["fl", "Flowey"],
+    ["mk", "Monster kid"], ["hu", "human"],
     // AUs
-    ["ss", "Storyshift"], ["sw", "Swap"], ["fe", "Underfell"], ["sf", "Swapfell"], ["ho", "Horrortale"],
-    ["ms", "Misc. Skeletons"]
+    ["ss", "Storyshift"], ["sw", "Swap"], ["fe", "Underfell"],
+    ["sf", "Swapfell"], ["ho", "Horrortale"], ["ms", "Misc. Skeletons"],
+    // Deltarune
+    ["kr", "Kris"], ["su", "Susie"], ["ra", "Ralsei"], ["ro", "Rouxls Kaard"],
+    ["se", "Seam"], ["la", "Lancer"], ["je", "Jevil"]
 ]);
 
 const groups = new Map([
     // The ordering of this decides which groups have priority over others
     // e.g. alphys,mettaton goes to General, frisk,burgerpants goes to MTT
+    ["Deltarune", ["Kris", "Susie", "Ralsei", "Lancer", "Rouxls Kaard",
+                   "Seam", "Jevil"]],
     ["General", ["Alphys", "Undyne", "Asgore", "Toriel", "Group"]],
-    ["MTT", ["Mettaton", "Burgerpants", "Napstablook", "Other bots"]],
+    ["MTT", ["Mettaton", "Burgerpants", "Napstablook", "Other bots", "Mew Mew",
+             "Mad Mew Mew", "Napstabot", "Mettablook"]],
     ["Skeletons", ["Sans", "Papyrus", "Gaster"]],
-    ["Children", ["Frisk", "Chara", "Asriel", "Flowey", "Monster kid", "human"]],
-    ["AUs", ["Storyshift", "Swap", "Underfell", "Swapfell", "Horrortale", "Misc. Skeletons"]],
+    ["Children", ["Frisk", "Chara", "Asriel", "Flowey", "Monster kid",
+                  "human"]],
+    ["AUs", ["Storyshift", "Swap", "Underfell", "Swapfell", "Horrortale",
+             "Misc. Skeletons"]]
 ]);
 
-const groupOrder = ["Children", "General", "Other", "MTT", "Skeletons", "AUs"];
+const groupOrder = ["Deltarune", "Children", "General", "Other", "MTT",
+                    "Skeletons", "AUs"];
 
 const specs = [];
 
