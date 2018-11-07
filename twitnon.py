@@ -33,9 +33,14 @@ def tweets(account, cutoff):
     page_bar = tqdm(desc=f"Pages read ({account})")
     while True:
         page_bar.update()
-        resp = requests.get(url, params=params, headers={
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:60.0) '
-            'Gecko/20100101 Firefox/60.0'})
+        try:
+            resp = requests.get(url, params=params, headers={
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:60.0) '
+                'Gecko/20100101 Firefox/60.0'}, timeout=30)
+        except:
+            page_bar.write(f"{account} got timeout")
+            page_bar.close()
+            return
         sleep(30)
         try:
             data = resp.json()
