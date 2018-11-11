@@ -156,14 +156,14 @@ const abbrevs = new Map([
     ["sf", "Swapfell"], ["ho", "Horrortale"], ["ms", "Misc. Skeletons"],
     // Deltarune
     ["kr", "Kris"], ["su", "Susie"], ["ra", "Ralsei"], ["ro", "Rouxls Kaard"],
-    ["se", "Seam"], ["la", "Lancer"], ["je", "Jevil"]
+    ["se", "Seam"], ["la", "Lancer"], ["je", "Jevil"], ["no", "Noelle"]
 ]);
 
 const groups = new Map([
     // The ordering of this decides which groups have priority over others
     // e.g. alphys,mettaton goes to General, frisk,burgerpants goes to MTT
     ["Deltarune", ["Kris", "Susie", "Ralsei", "Lancer", "Rouxls Kaard",
-                   "Seam", "Jevil"]],
+                   "Seam", "Jevil", "Noelle", "King"]],
     ["General", ["Alphys", "Undyne", "Asgore", "Toriel", "Group"]],
     ["MTT", ["Mettaton", "Burgerpants", "Napstablook", "Other bots", "Mew Mew",
              "Mad Mew Mew", "Napstabot", "Mettablook"]],
