@@ -483,6 +483,7 @@ window.onload = function() {
 }
 </script>
 </head><body>
+<p><a href="/howto">How to use</a></p>
 <div id="tweets">''', file=f)
     for img in sorted(imgs, reverse=True):
         print(img[1], file=f)
@@ -492,16 +493,7 @@ window.onload = function() {
     <button onclick="showtime();" id="showtime">Showtime</button><br />
     <a id="viewerlink"></a>
     <form id="sorterform" onsubmit="return false;"></form>
-    <pre id="done">
-To sort images, first click on them above to select them. Then press Showtime.
-For each image, enter the characters, and maybe a comment, and press enter.
-Many characters and AUs have two-letter abbreviations.
-If you enter "fl,ss!as/this is a comment", it becomes
->Storyshift!Asriel &amp; Flowey
-https://pbs.twimg.com/media/[...].jpg:orig (this is a comment)
-The names are capitalized and sorted.
-To dismiss an image, press enter without entering anything.
-    </pre>
+    <pre id="done"></pre>
     <pre id="todo"></pre>
 </div>
 <br /><br />Followed accounts are green, retweets are red.""", file=f)
