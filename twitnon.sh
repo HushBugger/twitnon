@@ -4,10 +4,11 @@ mkdir -p out
 ./twitnon.py out/$fname
 cat > out/index.html <<EOF
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8"/>
-    <script type="text/javascript">
+    <title>Twitnon report</title>
+    <script>
       window.location.replace("/$fname");
     </script>
   </head>

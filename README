@@ -1,3 +1,0 @@
-Simple Twitter image finder that makes HTML pages. Put account URLs in accounts.txt.
-
-twitnon.py does the scraping, twitnon.sh runs twitnon.py and puts it in a directory with a timestamp.
