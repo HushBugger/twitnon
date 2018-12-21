@@ -1,7 +1,7 @@
 #!/bin/sh
 fname=$(date -I).html
 mkdir -p out
-./twitnon.py out/$fname
+./twitnon.py "$@" out/$fname
 cat > out/index.html <<EOF
 <!DOCTYPE html>
 <html lang="en">
