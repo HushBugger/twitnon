@@ -325,7 +325,7 @@ function mark(ident) {
 function cleanup() {
     let interesting = [];
     let unused = [];
-    let tweets = document.getElementById('tweets');
+    let tweets = document.getElementById('twitnon-tweets');
     for (let tweet of tweets.getElementsByClassName('tweet')) {
         if (!tweet.classList.contains('marked')) {
             unused.push(tweet);
@@ -484,7 +484,7 @@ window.onload = function() {
 </script>
 </head><body>
 <p><a href="/howto">How to use</a></p>
-<div id="tweets">''', file=f)
+<div id="twitnon-tweets">''', file=f)
     for img in sorted(imgs, reverse=True):
         print(img[1], file=f)
     print("""
