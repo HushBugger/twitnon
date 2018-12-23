@@ -373,7 +373,14 @@ function render() {
     if (current) {
         document.location.hash = current.id;
     }
+    updateTitle();
     document.getElementById('reader').focus();
+}
+
+function updateTitle() {
+    const todo = document.getElementsByClassName('marked').length;
+    const done = specs.length;
+    document.title = done + '/' + (todo + done);
 }
 
 // Return the next tweet in the showtime queue
