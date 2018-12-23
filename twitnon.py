@@ -468,6 +468,16 @@ function showtime() {
     render();
 }
 
+// For use in the console
+function amend(desc) {
+    const oldspec = specs.pop();
+    specs.push(new Spec(desc, oldspec.url));
+}
+
+function latest() {
+    return specs[specs.length-1];
+}
+
 window.onload = function() {
     document.getElementById('sorterform').addEventListener(
         'submit',
