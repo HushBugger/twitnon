@@ -141,19 +141,20 @@ function filterTweeter(name) {
 const abbrevs = new Map([
     // General
     ["al", "Alphys"], ["un", "Undyne"], ["ag", "Asgore"], ["to", "Toriel"],
-    ["gr", "Group"],
+    ["gr", "Group"], ["mu", "Muffet"],
     // MTT crew
     ["mt", "Mettaton"], ["bp", "Burgerpants"], ["nb", "Napstablook"],
     ["ob", "Other bots"], ["mm", "Mew Mew"], ["mmm", "Mad Mew Mew"],
-    ["nbo", "Napstabot"], ["mb", "Mettablook"],
+    ["nbo", "Napstabot"], ["mb", "Mettablook"], ["ncg", "Nice Cream Guy"],
     // Skeletons
-    ["sa", "Sans"], ["pa", "Papyrus"], ["ga", "Gaster"],
+    ["sa", "Sans"], ["pa", "Papyrus"], ["ga", "Gaster"], ["bad", "Bad time"],
     // Children
     ["fr", "Frisk"], ["ch", "Chara"], ["as", "Asriel"], ["fl", "Flowey"],
     ["mk", "Monster kid"], ["hu", "human"],
     // AUs
     ["ss", "Storyshift"], ["sw", "Swap"], ["fe", "Underfell"],
     ["sf", "Swapfell"], ["ho", "Horrortale"], ["ms", "Misc. Skeletons"],
+    ["ali", "Aliza"],
     // Deltarune
     ["kr", "Kris"], ["su", "Susie"], ["ra", "Ralsei"], ["ro", "Rouxls Kaard"],
     ["se", "Seam"], ["la", "Lancer"], ["je", "Jevil"], ["no", "Noelle"]
@@ -164,14 +165,14 @@ const groups = new Map([
     // e.g. alphys,mettaton goes to General, frisk,burgerpants goes to MTT
     ["Deltarune", ["Kris", "Susie", "Ralsei", "Lancer", "Rouxls Kaard",
                    "Seam", "Jevil", "Noelle", "King"]],
-    ["General", ["Alphys", "Undyne", "Asgore", "Toriel", "Group"]],
+    ["General", ["Alphys", "Undyne", "Asgore", "Toriel", "Group", "Muffet"]],
     ["MTT", ["Mettaton", "Burgerpants", "Napstablook", "Other bots", "Mew Mew",
-             "Mad Mew Mew", "Napstabot", "Mettablook"]],
-    ["Skeletons", ["Sans", "Papyrus", "Gaster"]],
+             "Mad Mew Mew", "Napstabot", "Mettablook", "Nice Cream Guy"]],
+    ["Skeletons", ["Sans", "Papyrus", "Gaster", "Bad time"]],
     ["Children", ["Frisk", "Chara", "Asriel", "Flowey", "Monster kid",
                   "human"]],
     ["AUs", ["Storyshift", "Swap", "Underfell", "Swapfell", "Horrortale",
-             "Misc. Skeletons"]]
+             "Misc. Skeletons", "Aliza"]]
 ]);
 
 const groupOrder = ["Deltarune", "Children", "General", "Other", "MTT",
