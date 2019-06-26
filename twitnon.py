@@ -146,6 +146,7 @@ const abbrevs = new Map([
     ["mt", "Mettaton"], ["bp", "Burgerpants"], ["nb", "Napstablook"],
     ["ob", "Other bots"], ["mm", "Mew Mew"], ["mmm", "Mad Mew Mew"],
     ["nbo", "Napstabot"], ["mb", "Mettablook"], ["ncg", "Nice Cream Guy"],
+    ["np", "Nicepants"],
     // Skeletons
     ["sa", "Sans"], ["pa", "Papyrus"], ["ga", "Gaster"], ["bad", "Bad time"],
     // Children
@@ -167,7 +168,8 @@ const groups = new Map([
                    "Seam", "Jevil", "Noelle", "King"]],
     ["General", ["Alphys", "Undyne", "Asgore", "Toriel", "Group", "Muffet"]],
     ["MTT", ["Mettaton", "Burgerpants", "Napstablook", "Other bots", "Mew Mew",
-             "Mad Mew Mew", "Napstabot", "Mettablook", "Nice Cream Guy"]],
+             "Mad Mew Mew", "Napstabot", "Mettablook", "Nice Cream Guy",
+             "Nicepants"]],
     ["Skeletons", ["Sans", "Papyrus", "Gaster", "Bad time"]],
     ["Children", ["Frisk", "Chara", "Asriel", "Flowey", "Monster kid",
                   "human"]],
